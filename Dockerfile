@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM mikestrenk/pydev_img:latest
 
 COPY requirements.txt ./
 
@@ -8,4 +8,4 @@ WORKDIR /usr/src/mailroom
 
 COPY . /usr/src/mailroom
 
-RUN /bin/bash
+CMD ["zsh"]
