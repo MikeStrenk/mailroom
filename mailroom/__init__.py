@@ -1,1 +1,2 @@
-from . import compose, email_client
+from .Email import Email, EmailMessage
+from .email_client import exchange
