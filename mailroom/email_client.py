@@ -2,6 +2,16 @@ import exchangelib
 import smtplib
 
 
+###################################################
+# Setting up the Logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+ch = logging.StreamHandler(sys.stdout)
+ch.setFormatter(format)
+logger.addHandler(ch)
+###################################################
+
 
 def exchange(email_config):
         '''
