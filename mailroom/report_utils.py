@@ -7,6 +7,8 @@ import os
 # import pandas as pd
 # import smtplib
 
+###################################################
+# Email related imports
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
@@ -21,7 +23,14 @@ format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s
 ch = logging.StreamHandler(sys.stdout)
 ch.setFormatter(format)
 logger.addHandler(ch)
-###################################################
+
+# Login secrets dict format
+secrets_template = {
+    "email_address": "",
+    "password": "",
+    "domain": "",
+    "api_key": None
+}
 
 
 class Chart(object):
@@ -44,7 +53,7 @@ class Chart(object):
 
         filename = f'{filename}.png'
 
-    def make_line( data, xlabel='', ylabel=''):
+    def make_line(data, xlabel='', ylabel=''):
         plt.plot(data)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
@@ -57,18 +66,23 @@ class Email(object):
     '''
     '''
 
-    def __init__(self, subject, config):
+    def __init__(self, subject="Report ", secrets=None):
         self.date = dt.date.today().strftime("%m-%d-%y")
         self.html_body = ''
+        self.to_field = ''
+        self.from_field = ''
+        self.cc_field = ''
+        self.bcc_field = ''
 
         if type(subject) is str:
-            self.subject = subject
+            self.subject = subject + self.date
         else:
             raise TypeError('self.subject argument not a string')
-        
-        if config:
-            self.config = config
 
+        if secrets:
+            self.secrets = secrets
+        else:
+            self.secrets = secrets_template
 
     def add_html_element(self, filepath):
         '''
@@ -88,7 +102,6 @@ class Email(object):
 
     def add_image(self, filepath):
         '''
-        Work In Progress
         '''
         if type(filepath) is str:
             absolute_filepath = os.path.join(
@@ -122,13 +135,55 @@ class Email(object):
         else:
             raise TypeError('Function argument not a string')
 
-        def attach_images(self):
-            for image in self.images:
-                with open(image, 'rb') as fp:
-                    m.attach(FileAttachment(
-                        name=image, content=fp.read(), is_inline=True, content_id=image))
-   
-        def send_email(self, attachment=None):
+    def attach_images(self):
+        for image in self.images:
+            with open(image, 'rb') as fp:
+                m.attach(FileAttachment(
+                    name=image, content=fp.read(), is_inline=True, content_id=image))
+
+    def send_smtp(self, attachment=None, server=):
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = self.subject
+            msg['To'] = self.to_field
+            msg['From'] = self.from_field
+
+            logger.debug(print('the html_body is a ' + type(self.html_body) + ' datatype.')
+
+            # Create the body of the message (a plain-text and an HTML version).
+            # Record the MIME types of both parts - text/plain and text/html.
+            # part1 = MIMEText("nothing in the plain text email", 'plain')
+
+            part2 = MIMEText(self.html_body, 'html')
+            msg.attach(part2)
+
+            # This example assumes the image is in the current directory
+            # if image == True:
+            #     cwd = os.path.dirname(os.path.abspath(__file__))
+            #     image_path = os.path.join(cwd, image)
+            #     print(image_path)
+            #     fp = open(image_path, 'rb')
+            #     msgImage = MIMEImage(fp.read())
+            #     fp.close()
+
+            #     # Define the image's ID as referenced above
+            #     msgImage.add_header('Content-ID', '<image1>')
+            #     msg.attach(msgImage)
+
+            try:
+                mail = smtplib.SMTP('smtp.gmail.com', 587)
+                mail.ehlo()
+                mail.starttls()
+
+                mail.login(self.secrets['username'], self.secrets['password'])
+                mail.sendmail(self.from_address, self.from_address,
+                                msg.as_string())
+                mail.quit()
+
+                logger.info(f'\n--> Email sent with subject: "{self.subject}"\n')
+            except:
+                logger.error('Failed to connect to gmail')
+                
+        def send_exchange(self, attachment=None):
             '''
             Authenticates with exchave server and sends an email
             '''
@@ -151,7 +206,7 @@ class Email(object):
                 with open(attachment_filepath, 'rb') as f:
                     binary_file_content = f.read()
 
-                print(f'Attaching {attachment} to the report')
+                logger.info(f'Attaching {attachment} to the report')
                 m.attach(FileAttachment(name=attachment,
                                         content=binary_file_content))
 
@@ -160,6 +215,8 @@ class Email(object):
 
             m.send()
 
-            logger.info(f'\n--> Email sent with subject: "{self.subject}"\n')
+            logger.info(f'--> Email sent with subject: "{self.subject}"')
 
 
+if __name__ == '__main__':
+    pass
