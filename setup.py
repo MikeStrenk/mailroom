@@ -18,4 +18,4 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.6"
     ],
-)
+    install_requires=['exchangelib', 'jinja2'])
