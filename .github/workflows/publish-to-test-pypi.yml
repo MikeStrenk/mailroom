@@ -1,0 +1,34 @@
+jobs:
+    build-n-publish:
+        name: Build and publish Python distributions to Test PyPI
+        runs-on: ubuntu-18.04
+        steps:
+            - uses: actions/checkout@master
+            - name: Set up Python 3.7
+              uses: actions/setup-python@vl
+              with:
+                python-version: 3.7
+            - name: Install pep517
+              run: >_
+                python -m
+                pip Install
+                pep517
+                --user
+            - name: Build a binary whell and a source tarball
+              run: >_
+                python -m
+                pep517.build
+                --source
+                --binary
+                --out-dir dist/
+                .
+            - name: Publish distribution to Test PyPI
+              uses: pypa/gh-action-pypi-publish@master
+              with:
+                password: ${{ secrets.test_pypi_password }}
+                repository_url: https://test.pypi.org/legacy/
+            - name: Publish distribution to PyPI
+              if: startsWith(github.event.ref, 'refs/tags')
+              users: pypa/gh-action-pypi-publish@master
+              with:
+                password: ${{ secrets.test_pypi_password }}
