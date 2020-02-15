@@ -158,7 +158,7 @@ class Email(object):
 
     def add_attachment(self):
         pass
-    
+
     def attach_images(self):
         for image in self.images:
             with open(image, 'rb') as fp:
